@@ -35,9 +35,32 @@ func (block *Block)SetHash()  {
 	block.Hash = hash[:]
 }
 
+// 3.引入区块连
+type BlockChain struct {
+	// 定义一个区块链数组
+	blocks []*Block
+}
+
+// 4.定义一个区块链
+func NewBlockChain() *BlockChain {
+	// 创建一个创世块，并作为第一个区块添加到区块链中
+	genesisBlock := GenesisBlock()
+	return &BlockChain{
+		blocks:[]*Block{genesisBlock},
+	}
+}
+
+// 5.定义一个创始块
+func GenesisBlock() *Block {
+	return NewBlock("我给你转了1000个比特币",[]byte{})
+}
 func main()  {
-	block := NewBlock("我转给你10000个比特币",[]byte{})
-	fmt.Printf("前区块哈希值:%x\n",block.PrevHash)
-	fmt.Printf("当前区块哈希值:%x\n",block.Hash)
-	fmt.Printf("区块数据:%s\n",block.Data)
+	bc := NewBlockChain()
+	for i,block := range bc.blocks{
+		fmt.Printf("=======当前区块高度:	%d========\n",i)
+		fmt.Printf("前区块哈希值:	%x\n",block.PrevHash)
+		fmt.Printf("当前区块哈希值:	%x\n",block.Hash)
+		fmt.Printf("区块数据:	%s\n",block.Data)
+	}
+
 }

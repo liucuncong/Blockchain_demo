@@ -1,40 +1,71 @@
 package main
 
-import "crypto/sha256"
+import (
+	"crypto/sha256"
+	"time"
+)
 
 const genesisInfo = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks"
 
 // 0. 定义结构
 type Block struct {
-	// 前区块哈西
+	// 1.版本号
+	Version uint64
+	// 2.前区块哈西
 	PrevHash []byte
-	// 当前区块哈希
+	// 3.Merkel根（这就是一个哈希值，这里先不管，v4再介绍）
+	MerkelRoot []byte
+	// 4.时间戳
+	TimeStamp uint64
+	// 5.难度值
+	Difficulty uint64
+	// 6.随机数
+	Nounce uint64
+
+	// a.当前区块哈希
 	Hash []byte
-	// 数据
+	// b.数据
 	Data []byte
 }
 
+// 实现一个辅助函数，将uint64转成[]byte
+func Uint64ToByte(data uint64) []byte {
+	return []byte{}
+}
+
 // 1.创建区块
-func NewBlock(data string,prevBlockHash []byte) *Block {
+func NewBlock(data string, prevBlockHash []byte) *Block {
 	block := Block{
-		PrevHash:prevBlockHash,
-		Hash:[]byte{},  // 先填空，后面再计算
-		Data:[]byte(data),
+		Version:00,
+		PrevHash: prevBlockHash,
+		MerkelRoot:[]byte{},
+		TimeStamp:uint64(time.Now().Unix()),
+		Difficulty:0,
+		Nounce:0,
+		Hash:     []byte{}, // 先填空，后面再计算
+		Data:     []byte(data),
 	}
 	block.SetHash()
 	return &block
 }
 
 // 2.生成哈希
-func (block *Block)SetHash()  {
+func (block *Block) SetHash() {
+	var blockInfo []byte
 	// 1.拼装数据
-	blockInfo := append(block.PrevHash,block.Data...)
+	blockInfo = append(blockInfo, Uint64ToByte(block.Version)...)
+	blockInfo = append(blockInfo, block.PrevHash...)
+	blockInfo = append(block.PrevHash, block.MerkelRoot...)
+	blockInfo = append(blockInfo, Uint64ToByte(block.TimeStamp)...)
+	blockInfo = append(blockInfo, Uint64ToByte(block.Difficulty)...)
+	blockInfo = append(blockInfo, Uint64ToByte(block.Nounce)...)
+	blockInfo = append(blockInfo, block.Data...)
 	// 2.sha256
 	hash := sha256.Sum256(blockInfo)
 	block.Hash = hash[:]
 }
 
 // 5.定义一个创始块
-func GenesisBlock(data string,prevBlockHash []byte) *Block {
-	return NewBlock(data,prevBlockHash)
+func GenesisBlock(data string, prevBlockHash []byte) *Block {
+	return NewBlock(data, prevBlockHash)
 }

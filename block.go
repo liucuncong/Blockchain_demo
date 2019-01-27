@@ -3,6 +3,9 @@ package main
 import (
 	"crypto/sha256"
 	"time"
+	"bytes"
+	"encoding/binary"
+	"log"
 )
 
 const genesisInfo = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks"
@@ -30,7 +33,13 @@ type Block struct {
 
 // 实现一个辅助函数，将uint64转成[]byte
 func Uint64ToByte(data uint64) []byte {
-	return []byte{}
+	var buffer bytes.Buffer
+	err := binary.Write(&buffer,binary.BigEndian,data)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	return buffer.Bytes()
 }
 
 // 1.创建区块

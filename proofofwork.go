@@ -22,7 +22,7 @@ func NewProofOfWork(block *Block) *ProofOfWork {
 		block:block,
 	}
 	// 我们指定的难度值现在是一个string类型，需要进行转换
-	targertStr := "00001000000000000000000"
+	targertStr := "0000100000000000000000000000000000000000000000000000000000000000"
 	// 引入辅助变量，目的是将上面的难度值转成big.int
 	tem := big.Int{}
 	// 将难度值赋值给big.Int，指定16进制的格式
@@ -54,21 +54,19 @@ func (pow *ProofOfWork)Run() ([]byte,uint64) {
 		//2.做哈希运算
 		hash = sha256.Sum256(blockInfo)
 		//3.将哈希转成big.Int类型，与pow中的target进行比较
-		temTar := big.Int{}
-		temTar.SetBytes(hash[:])
-		if temTar.Cmp(pow.targert) == -1 {
+		temInt := big.Int{}
+		temInt.SetBytes(hash[:])
+		if temInt.Cmp(pow.targert) == -1 {
 			//a.找到了，退出返回
 			fmt.Printf("挖矿成功，hash:%x;nounce:%d\n",hash,nounce)
 			break
-		}else {
-			//b.没找到，继续找，随机数+1
-			nounce++
 		}
-		return hash[:],nounce
+		//b.没找到，继续找，随机数+1
+		nounce++
 	}
 
 
-	return []byte{},0
+	return hash[:],nounce
 }
 
 // 提供一个校验哈希的函数

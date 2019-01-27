@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/sha256"
 	"time"
 	"bytes"
 	"encoding/binary"
@@ -54,23 +53,27 @@ func NewBlock(data string, prevBlockHash []byte) *Block {
 		Hash:     []byte{}, // 先填空，后面再计算
 		Data:     []byte(data),
 	}
-	block.SetHash()
+	// 创建一个pow对象
+	pow := NewProofOfWork(&block)
+	hash,nounce := pow.Run()
+	block.Hash = hash
+	block.Nounce = nounce
 	return &block
 }
-
+/*
 // 2.生成哈希
 func (block *Block) SetHash() {
 	var blockInfo []byte
 	// 1.拼装数据
-	/*
-	blockInfo = append(blockInfo, Uint64ToByte(block.Version)...)
-	blockInfo = append(blockInfo, block.PrevHash...)
-	blockInfo = append(block.PrevHash, block.MerkelRoot...)
-	blockInfo = append(blockInfo, Uint64ToByte(block.TimeStamp)...)
-	blockInfo = append(blockInfo, Uint64ToByte(block.Difficulty)...)
-	blockInfo = append(blockInfo, Uint64ToByte(block.Nounce)...)
-	blockInfo = append(blockInfo, block.Data...)
-	*/
+
+	//blockInfo = append(blockInfo, Uint64ToByte(block.Version)...)
+	//blockInfo = append(blockInfo, block.PrevHash...)
+	//blockInfo = append(block.PrevHash, block.MerkelRoot...)
+	//blockInfo = append(blockInfo, Uint64ToByte(block.TimeStamp)...)
+	//blockInfo = append(blockInfo, Uint64ToByte(block.Difficulty)...)
+	//blockInfo = append(blockInfo, Uint64ToByte(block.Nounce)...)
+	//blockInfo = append(blockInfo, block.Data...)
+
 	tem := [][]byte{
 		Uint64ToByte(block.Version),
 		block.PrevHash,
@@ -81,12 +84,13 @@ func (block *Block) SetHash() {
 		block.Data,
 	}
 	// 将二维的切片数组连接起来，返回一个一维的切片
-	bytes.Join(tem,[]byte{})
+	blockInfo = bytes.Join(tem,[]byte{})
 
 	// 2.sha256
 	hash := sha256.Sum256(blockInfo)
 	block.Hash = hash[:]
 }
+*/
 
 // 5.定义一个创始块
 func GenesisBlock(data string, prevBlockHash []byte) *Block {

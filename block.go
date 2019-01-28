@@ -8,7 +8,7 @@ import (
 	"encoding/gob"
 )
 
-const genesisInfo = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks"
+const GENESISINFO = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks"
 
 // 0. 定义结构
 type Block struct {

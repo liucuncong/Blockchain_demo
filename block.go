@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"log"
+	"encoding/gob"
 )
 
 const genesisInfo = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks"
@@ -96,3 +97,33 @@ func (block *Block) SetHash() {
 func GenesisBlock(data string, prevBlockHash []byte) *Block {
 	return NewBlock(data, prevBlockHash)
 }
+
+// 将区块序列化
+func (block *Block)Serialize() []byte {
+	// 编码的数据放到buffer
+	var buffer bytes.Buffer
+	// 使用gob进行序列化（编码）得到字节流
+	// 1.定义一个编码器
+	encoder := gob.NewEncoder(&buffer)
+	// 2.使用编码器进行编码
+	err := encoder.Encode(block)
+	if err != nil {
+		log.Panic("编码错误")
+	}
+
+	return buffer.Bytes()
+}
+
+// 反序列化
+func Deserialize(data []byte) Block {
+	// 1.定义一个解码器
+	decoder := gob.NewDecoder(bytes.NewReader(data))
+	// 2.解码
+	var block Block
+	err := decoder.Decode(&block)
+	if err != nil {
+		log.Panic("解码错误")
+	}
+	return block
+}
+

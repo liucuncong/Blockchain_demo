@@ -51,8 +51,8 @@ func NewBlock(data string, prevBlockHash []byte) *Block {
 		TimeStamp:uint64(time.Now().Unix()),
 		Difficulty:0,
 		Nounce:0,
-		Hash:     []byte{}, // 先填空，后面再计算
-		Data:     []byte(data),
+		Hash:[]byte{}, // 先填空，后面再计算
+		Data:[]byte(data),
 	}
 	// 创建一个pow对象
 	pow := NewProofOfWork(&block)

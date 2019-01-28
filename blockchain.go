@@ -3,8 +3,7 @@ package main
 import (
 	"github.com/boltdb/bolt"
 	"log"
-	"fmt"
-)
+	)
 
 // 3.引入区块连
 type BlockChain struct {
@@ -43,9 +42,11 @@ func NewBlockChain() *BlockChain {
 			bucket.Put(genesisBlock.Hash,genesisBlock.Serialize())
 			bucket.Put([]byte("lastHashKey"),genesisBlock.Hash)
 			lastBlockHash = genesisBlock.Hash
-			blockBytes := bucket.Get(genesisBlock.Hash)
-			block := Deserialize(blockBytes)
-			fmt.Printf("Deserialize：%v\n",block)
+
+			// 测试用的，马上删掉
+			//blockBytes := bucket.Get(genesisBlock.Hash)
+			//block := Deserialize(blockBytes)
+			//fmt.Printf("Deserialize：%v\n",block)
 		} else {
 			lastBlockHash = bucket.Get([]byte("lastHashKey"))
 		}
@@ -55,16 +56,37 @@ func NewBlockChain() *BlockChain {
 	return &BlockChain{db,lastBlockHash}
 }
 
-/*
+
 // 6.添加区块
 func (bc *BlockChain)AddBlock(data string)  {
 	// 1.获取最后一个区块的哈希
-	lastBlock := bc.blocks[len(bc.blocks)-1]
-	preHash := lastBlock.Hash
+	lastBlockHash := bc.lastBlockHash
 
-	// 2.创建新的区块
-	block := NewBlock(data,preHash)
-	// 3.添加区块到区块链数组中
-	bc.blocks = append(bc.blocks, block)
+	db,err := bolt.Open(blockChainDB,0600,nil)
+	if err != nil {
+		log.Panic("打开数据库失败！")
+	}
+	defer db.Close()
+
+	db.Update(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(blockBucket))
+		if bucket == nil{
+			log.Panic("打开bucket失败！")
+		}
+		// 2.创建新的区块
+		block := NewBlock(data,lastBlockHash)
+		// 3.添加区块到区块链数中
+		err = bucket.Put(block.Hash,block.Serialize())
+		if err != nil {
+			log.Panic("数据库添加区块失败！")
+		}
+		err = bucket.Put([]byte("lastHashKey"),block.Hash)
+		if err != nil {
+			log.Panic("数据库添加最新区块哈希失败！")
+		}
+		// 4.更新一下内存中的区块链，指的是把lastBlockHash更新一下
+		bc.lastBlockHash = block.Hash
+
+		return nil
+	})
 }
-*/

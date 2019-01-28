@@ -58,7 +58,7 @@ func (pow *ProofOfWork)Run() ([]byte,uint64) {
 		temInt.SetBytes(hash[:])
 		if temInt.Cmp(pow.targert) == -1 {
 			//a.找到了，退出返回
-			fmt.Printf("挖矿成功，hash:%x;nounce:%d\n",hash,nounce)
+			fmt.Printf("挖矿成功! hash:%x;nounce:%d\n",hash,nounce)
 			break
 		}
 		//b.没找到，继续找，随机数+1

@@ -13,7 +13,7 @@ type CLI struct {
 
 const USAGE = `
 	addBlock --data DATA    "add data to blockchain"
-	printChain				"print all blockchain data"
+	printChain	        "print all blockchain data"
 `
 
 // 接收参数的动作，我们放到一个函数中
@@ -45,4 +45,3 @@ func (cli *CLI) Run() {
 		fmt.Println(USAGE)
 	}
 }
-

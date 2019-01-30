@@ -24,11 +24,10 @@ type Block struct {
 	Difficulty uint64
 	// 6.随机数
 	Nounce uint64
-
-	// a.当前区块哈希
+	// 7.当前区块哈希
 	Hash []byte
-	// b.数据
-	Data []byte
+	// 8.交易数据
+	Transactions []*Transaction
 }
 
 // 实现一个辅助函数，将uint64转成[]byte
@@ -43,7 +42,7 @@ func Uint64ToByte(data uint64) []byte {
 }
 
 // 1.创建区块
-func NewBlock(data string, prevBlockHash []byte) *Block {
+func NewBlock(txs []*Transaction, prevBlockHash []byte) *Block {
 	block := Block{
 		Version:00,
 		PrevHash: prevBlockHash,
@@ -52,8 +51,9 @@ func NewBlock(data string, prevBlockHash []byte) *Block {
 		Difficulty:0,
 		Nounce:0,
 		Hash:[]byte{}, // 先填空，后面再计算
-		Data:[]byte(data),
+		Transactions:txs,
 	}
+	block.MerkelRoot = block.MakeMerkelRoot()
 	// 创建一个pow对象
 	pow := NewProofOfWork(&block)
 	hash,nounce := pow.Run()
@@ -94,8 +94,9 @@ func (block *Block) SetHash() {
 */
 
 // 5.定义一个创始块
-func GenesisBlock(data string, prevBlockHash []byte) *Block {
-	return NewBlock(data, prevBlockHash)
+func GenesisBlock(address string, prevBlockHash []byte) *Block {
+	coinbase := NewCoinbaseTX(address,"The Times 03/Jan/2009 Chancellor on brink of second bailout for banks")
+	return NewBlock([]*Transaction{coinbase}, prevBlockHash)
 }
 
 // 将区块序列化
@@ -127,3 +128,8 @@ func Deserialize(data []byte) Block {
 	return block
 }
 
+// 模拟默克尔根，只是对交易的数据做简单的拼接，而不做二叉树处理
+func (block *Block)MakeMerkelRoot() []byte {
+
+	return []byte{}
+}

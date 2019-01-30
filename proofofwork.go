@@ -47,7 +47,6 @@ func (pow *ProofOfWork)Run() ([]byte,uint64) {
 			Uint64ToByte(block.TimeStamp),
 			Uint64ToByte(block.Difficulty),
 			Uint64ToByte(nounce),
-			block.Data,
 		}
 		// 将二维的切片数组连接起来，返回一个一维的切片
 		blockInfo := bytes.Join(tem,[]byte{})

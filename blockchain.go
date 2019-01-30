@@ -148,3 +148,15 @@ func (bc *BlockChain)FindUTXOs(address string) []TXOutput {
 
 	return UTXO
 }
+
+//
+func (bc *BlockChain)FindNeedUTXOs(from string,amount float64) (map[string][]int64,float64) {
+	// 找到的合理的utxos集合
+	var utxos map[string][]int64
+	// 找到utxos里面包含钱的总数
+	var calc float64
+
+	//TODO
+
+	return utxos,calc
+}

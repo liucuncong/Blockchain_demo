@@ -40,6 +40,14 @@ func (cli *CLI)GetBalance(address string)  {
 }
 
 func (cli *CLI)Send(from,to string,amount float64,miner,data string)()  {
+	//1.创建一个挖矿交易
+	coinbase := NewCoinbaseTX(miner,data)
+	//2.创建一个普通交易
+	tx := NewTransaction(from,to,amount,cli.BC)
+	if tx == nil {
+		return
+	}
+	//3.添加到区块
+	cli.BC.AddBlock([]*Transaction{coinbase,tx})
 
-	fmt.Println(amount)
 }

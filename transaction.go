@@ -8,7 +8,7 @@ import (
 	"fmt"
 )
 // 挖矿奖励
-const REWARD  = 12.5
+const REWARD  = 50
 
 // 1.定义交易结构
 type Transaction struct {

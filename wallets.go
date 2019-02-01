@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"crypto/elliptic"
-)
+	)
 
 // 定义一个Wallets结构，它保存所有的wallet及它的地址
 type Wallets struct {
@@ -70,4 +70,13 @@ func (ws *Wallets)LoadFile()  {
 	ws.WalletsMap = wallets.WalletsMap
 }
 
+func (ws *Wallets)ListAllAddresses() []string {
+
+	var addresses []string
+	// 遍历钱包，将所有的key取出来返回
+	for address := range ws.WalletsMap {
+		addresses = append(addresses, address)
+	}
+	return addresses
+}
 

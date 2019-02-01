@@ -58,10 +58,17 @@ func (cli *CLI)Send(from,to string,amount float64,miner,data string)()  {
 
 func (cli *CLI)NewWallet()  {
 	ws := NewWallets()
-	ws.CreateWallet()
-	for address := range ws.WalletsMap {
+	address := ws.CreateWallet()
+	fmt.Printf("地址:%s\n",address)
 
-	fmt.Println(address)
-	}
 }
 
+func (cli *CLI)ListAddresses()  {
+	ws := NewWallets()
+
+	addresses := ws.ListAllAddresses()
+	for _,address := range addresses {
+		fmt.Printf("地址:%s\n",address)
+	}
+
+}

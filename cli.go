@@ -17,6 +17,7 @@ const USAGE = `
 	getBalance --address ADDRESS  "获取指定地址的余额"
 	send FROM TO AMOUNT MINER DATA  "由FROM转AMOUNT给TO，由MINER挖矿，同时写入DATA"
 	newWallet  "创建一个新的钱包（私钥公钥对）"
+	listAddresses  "列举所有的钱包地址"
 `
 
 // 接收参数的动作，我们放到一个函数中
@@ -70,6 +71,9 @@ func (cli *CLI) Run() {
 	case "newWallet":
 		fmt.Println("创建新的钱包")
 		cli.NewWallet()
+	case "listAddresses":
+		fmt.Println("列举所有的地址。。。。")
+		cli.ListAddresses()
 	default:
 		fmt.Println("无效的命令，请检查")
 		fmt.Println(USAGE)

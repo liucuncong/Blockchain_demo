@@ -18,6 +18,7 @@ func NewWallets() *Wallets {
 	//wallets := LoadFile()
 	var wallets Wallets
 	wallets.WalletsMap = make(map[string]*Wallet)
+	wallets.LoadFile()
 	return &wallets
 }
 
@@ -49,3 +50,24 @@ func (ws *Wallets)SaveToFile()  {
 }
 
 // 读取文件方法，把所有的wallet读出来
+func (ws *Wallets)LoadFile()  {
+
+	// 1.读取内容
+	content,err := ioutil.ReadFile("wallet.dat")
+	if err != nil {
+		log.Panic(err)
+	}
+	// 解码
+	gob.Register(elliptic.P256())
+	decoder := gob.NewDecoder(bytes.NewReader(content))
+	var wallets Wallets  // !!!注意这里不要定义为地址，如果这里为var wallets *Wallets，下面传wallets会报错
+
+	err = decoder.Decode(&wallets)  // &wallets
+	if err != nil {
+		log.Panic(err)
+	}
+	// 对于是map的结构来说，要指定赋值，不要在最外层直接赋值
+	ws.WalletsMap = wallets.WalletsMap
+}
+
+

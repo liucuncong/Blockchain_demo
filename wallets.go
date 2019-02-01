@@ -6,12 +6,16 @@ import (
 	"io/ioutil"
 	"log"
 	"crypto/elliptic"
-	)
+	"os"
+)
 
 // 定义一个Wallets结构，它保存所有的wallet及它的地址
 type Wallets struct {
 	WalletsMap map[string]*Wallet
 }
+
+const WALLETFILENAME  = "wallet.dat"
+
 
 // 创建方法
 func NewWallets() *Wallets {
@@ -46,15 +50,19 @@ func (ws *Wallets)SaveToFile()  {
 		log.Panic(err)
 	}
 
-	ioutil.WriteFile("wallet.dat",buffer.Bytes(),0600)
+	ioutil.WriteFile(WALLETFILENAME,buffer.Bytes(),0600)
 }
 
 // 读取文件方法，把所有的wallet读出来
 func (ws *Wallets)LoadFile()  {
-
+	// 在读取之前，要判断文件是否存在，如果不存在，直接退出
+	_,err := os.Stat(WALLETFILENAME)
+	if os.IsNotExist(err) {
+		return
+	}
 	// 1.读取内容
-	content,err := ioutil.ReadFile("wallet.dat")
-	if err != nil {
+	content,err := ioutil.ReadFile(WALLETFILENAME)
+	if os.IsNotExist(err) {
 		log.Panic(err)
 	}
 	// 解码

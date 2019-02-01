@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"log"
 	"encoding/gob"
+	"crypto/sha256"
 )
 
 const GENESISINFO = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks"
@@ -130,6 +131,10 @@ func Deserialize(data []byte) Block {
 
 // 模拟默克尔根，只是对交易的数据做简单的拼接，而不做二叉树处理
 func (block *Block)MakeMerkelRoot() []byte {
-
-	return []byte{}
+	var info []byte
+	for _,tx := range block.Transactions {
+		info = append(info, tx.TXID...)
+	}
+	hash := sha256.Sum256(info)
+	return hash[:]
 }

@@ -1,10 +1,13 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
-func (cli *CLI)AddBlock(data string)()  {
-	//cli.BC.AddBlock(data)
-}
+//func (cli *CLI)AddBlock(data string)()  {
+//	//cli.BC.AddBlock(data)
+//}
 
 func (cli *CLI)PrintChain()  {
 	// 创建迭代器
@@ -18,7 +21,8 @@ func (cli *CLI)PrintChain()  {
 		fmt.Printf("版本号:	%d\n",block.Version)
 		fmt.Printf("前区块哈希值:	%x\n",block.PrevHash)
 		fmt.Printf("默克尔根:	%x\n",block.MerkelRoot)
-		fmt.Printf("时间戳:	%d\n",block.TimeStamp)
+		timeFormat := time.Unix(int64(block.TimeStamp),0).Format("2006-01-02 15:04:05")
+		fmt.Printf("时间戳:	%s\n",timeFormat)
 		fmt.Printf("难度值:	%d\n",block.Difficulty)
 		fmt.Printf("随机数:	%d\n",block.Nounce)
 		fmt.Printf("当前区块哈希值:	%x\n",block.Hash)
@@ -50,4 +54,12 @@ func (cli *CLI)Send(from,to string,amount float64,miner,data string)()  {
 	//3.添加到区块
 	cli.BC.AddBlock([]*Transaction{coinbase,tx})
 
+}
+
+func (cli *CLI)NewWallet()  {
+	wallet := NewWallet()
+	address := wallet.NewAddress()
+	fmt.Println(wallet.Privatekey)
+	fmt.Println(wallet.PubKey)
+	fmt.Println(address)
 }

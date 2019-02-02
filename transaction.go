@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"crypto/ecdsa"
 	"crypto/rand"
+	"math/big"
+	"crypto/elliptic"
 )
 // 挖矿奖励
 const REWARD  = 50
@@ -173,6 +175,11 @@ func NewTransaction(from,to string,amount float64,bc *BlockChain) *Transaction {
 // 签名的具体实现
 // 参数：私钥，inputs里面所有引用的交易的结构 map[string]Transaction
 func (tx *Transaction)Sign(privateKey *ecdsa.PrivateKey,prevTXs map[string]Transaction)  {
+	// coinbase不需要签名
+	if tx.IsCoinbase() {
+		return
+	}
+
 	// 1.创建一个当前交易的副本:txCopy,使用函数:TrimmedCopy:要把Signature和PubKey字段设置为nil
 	txCopy := tx.TrimmedCopy()
 	// 2.循环遍历txCopy的inputs，得到这个input所引用的交易的output的公钥哈希
@@ -219,7 +226,57 @@ func (tx *Transaction)TrimmedCopy() Transaction {
 	return Transaction{tx.TXID,inputs,outputs}
 }
 
+// 分析校验：
+// 所需的数据：公钥，数据（txCopy,生成哈希），签名
+// 我们要对每一个签名过的input进行校验
+func (tx *Transaction)Verify(prevTXs map[string]Transaction) bool {
+	// coinbase不需要校验
+	if tx.IsCoinbase() {
+	return true
+	}
+	// 1.得到签名的数据
+	txCopy := tx.TrimmedCopy()
+	for i,input := range tx.TXInputs {
+		prevTx := prevTXs[string(input.TXid)]
+		if len(prevTx.TXID) == 0{
+			log.Panic("引用的交易无效")
+		}
 
+		txCopy.TXInputs[i].PubKey = prevTx.TXOutputs[input.Index].PubKeyHash
+		// 所需要的三个数据都具备了，开始做哈希处理
+		txCopy.SetHash()
+		//得到签名的数据
+		signDataHash := txCopy.TXID
+		// 2.得到Signature
+		signature := input.Signature  //拆 r,s
+		r := big.Int{}
+		s := big.Int{}
+		r.SetBytes(signature[:len(signature)/2])
+		s.SetBytes(signature[len(signature)/2:])
+
+		// 3.拆解PunKey,X,Y;得到原生公钥
+		PubKey := input.PubKey  //拆 X,Y
+
+		X := big.Int{}
+		Y := big.Int{}
+		X.SetBytes(signature[:len(PubKey)/2])
+		Y.SetBytes(signature[len(PubKey)/2:])
+
+		pubKeyOrigin := ecdsa.PublicKey{elliptic.P256(),&X,&Y}
+		// 4.Verify
+		if !ecdsa.Verify(&pubKeyOrigin,signDataHash,&r,&s) {
+			return false
+		}
+
+
+		// 还原，以免影响后面input的签名
+		txCopy.TXInputs[i].PubKey = nil
+
+	}
+
+	return true
+
+}
 
 // 3.创建挖矿交易
 

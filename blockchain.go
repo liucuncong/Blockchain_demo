@@ -3,7 +3,8 @@ package main
 import (
 	"github.com/boltdb/bolt"
 	"log"
-	)
+	"bytes"
+)
 
 // 3.引入区块连
 type BlockChain struct {
@@ -92,13 +93,13 @@ func (bc *BlockChain)AddBlock(txs []*Transaction)  {
 }
 
 // 找到指定地址的所有utxo
-func (bc *BlockChain)FindUTXOs(address string) []TXOutput {
+func (bc *BlockChain)FindUTXOs(pubKeyHash []byte) []TXOutput {
 	var UTXO []TXOutput
 
-	txs := bc.FindUTXOTransactions(address)
+	txs := bc.FindUTXOTransactions(pubKeyHash)
 	for _,tx := range txs {
 		for _,output := range tx.TXOutputs {
-			if output.PubKeyHash == address {
+			if bytes.Equal(pubKeyHash,output.PubKeyHash) {
 				UTXO = append(UTXO, output)
 			}
 		}
@@ -108,15 +109,16 @@ func (bc *BlockChain)FindUTXOs(address string) []TXOutput {
 }
 
 //
-func (bc *BlockChain)FindNeedUTXOs(from string,amount float64) (map[string][]int64,float64) {
+func (bc *BlockChain)FindNeedUTXOs(senderPubKeyHash []byte,amount float64) (map[string][]int64,float64) {
 	// 找到的合理的utxos集合
 	var utxos = make(map[string][]int64)
 	// 找到utxos里面包含钱的总数
 	var calc float64
-	txs := bc.FindUTXOTransactions(from)
+	txs := bc.FindUTXOTransactions(senderPubKeyHash)
 	for _,tx := range txs {
 		for i,output := range tx.TXOutputs {
-			if output.PubKeyHash == from {
+			// 比较是否相等，返回true或false
+			if bytes.Equal(senderPubKeyHash,output.PubKeyHash) {
 				//UTXO = append(UTXO, output)
 				//UTXO = append(UTXO, output)
 				// 我们要实现的逻辑就在这里，找到自己需要的最少的utxo
@@ -142,7 +144,7 @@ func (bc *BlockChain)FindNeedUTXOs(from string,amount float64) (map[string][]int
 	return utxos,calc
 }
 
-func (bc *BlockChain)FindUTXOTransactions(address string) []*Transaction {
+func (bc *BlockChain)FindUTXOTransactions(senderPubKeyHash []byte) []*Transaction {
 	var txs []*Transaction //存储所有包含utxo交易的集合
 
 	// 4.遍历input，找到和自己花费的utxo
@@ -172,7 +174,7 @@ func (bc *BlockChain)FindUTXOTransactions(address string) []*Transaction {
 					}
 				}
 
-				if output.PubKeyHash == address {
+				if bytes.Equal(senderPubKeyHash,output.PubKeyHash) {
 					//UTXO = append(UTXO, output)
 					//返回所有包含我的utxo交易的集合
 					txs = append(txs, tx)
@@ -183,7 +185,8 @@ func (bc *BlockChain)FindUTXOTransactions(address string) []*Transaction {
 			if !tx.IsCoinbase() {
 				// 4.遍历input，找到和自己花费的utxo
 				for _,input := range tx.TXInputs {
-					if input.Sig == address {
+					pubKeyHash := HashRipemd160(input.PubKey)
+					if bytes.Equal(pubKeyHash,senderPubKeyHash) {
 						spentOutputs[string(input.TXid)] = append(spentOutputs[string(input.TXid)],input.Index)
 					}
 				}

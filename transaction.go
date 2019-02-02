@@ -6,7 +6,8 @@ import (
 	"log"
 	"crypto/sha256"
 	"fmt"
-	)
+	"crypto/ecdsa"
+)
 // 挖矿奖励
 const REWARD  = 50
 
@@ -128,7 +129,7 @@ func NewTransaction(from,to string,amount float64,bc *BlockChain) *Transaction {
 
 	// 3.得到对应的公私钥
 	pubKey := wallet.PubKey
-	//privateKey := wallet.Privatekey  //TODO
+	privateKey := wallet.Privatekey
 
 	// 4.得到公钥哈希
 	pubKeyHash := HashRipemd160(pubKey)
@@ -162,8 +163,21 @@ func NewTransaction(from,to string,amount float64,bc *BlockChain) *Transaction {
 	}
 	tx := Transaction{[]byte{},inputs,outputs}
 	tx.SetHash()
+
+	// 交易创建的最后进行签名
+	prevTXs := make(map[string]Transaction)
+
+	tx.Sign(*privateKey,prevTXs)
+
 	return &tx
 }
+
+// 签名的具体实现
+// 参数：私钥，inputs里面所有引用的交易的结构 map[string]Transaction
+func (tx *Transaction)Sign(privateKey ecdsa.PrivateKey,prevTXs map[string]Transaction)  {
+	// TODO
+}
+
 
 // 3.创建挖矿交易
 

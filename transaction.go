@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"crypto/ecdsa"
+	"crypto/rand"
 )
 // 挖矿奖励
 const REWARD  = 50
@@ -172,8 +173,52 @@ func NewTransaction(from,to string,amount float64,bc *BlockChain) *Transaction {
 // 签名的具体实现
 // 参数：私钥，inputs里面所有引用的交易的结构 map[string]Transaction
 func (tx *Transaction)Sign(privateKey *ecdsa.PrivateKey,prevTXs map[string]Transaction)  {
-	// TODO
+	// 1.创建一个当前交易的副本:txCopy,使用函数:TrimmedCopy:要把Signature和PubKey字段设置为nil
+	txCopy := tx.TrimmedCopy()
+	// 2.循环遍历txCopy的inputs，得到这个input所引用的交易的output的公钥哈希
+	for i,input := range txCopy.TXInputs {
+
+		prevTx := prevTXs[string(input.TXid)]
+		if len(prevTx.TXID) == 0{
+			log.Panic("引用的交易无效")
+		}
+		// 3.生成要签名的数据。要签名的数据一定是哈希值
+		//a.我们对每一个input都要签名一次，签名数据是由当前input引用的交易的output的公钥哈希+当前的outputs(都承载在当前这个txCopy里面)
+		//b.要对这个拼好的txCopy进行哈希处理，SetHash得到TXID，这个TXID就是我们要签名的最终数据
+
+		// 不要对input进行赋值，他只是一个副本，要对txCopy.TXInputs[xx]进行操作，要不然无法把pubKeyHash传进来
+		txCopy.TXInputs[i].PubKey = prevTx.TXOutputs[input.Index].PubKeyHash
+		// 所需要的三个数据都具备了，开始做哈希处理
+		txCopy.SetHash()
+		signDataHash := txCopy.TXID
+		// 还原，以免影响后面input的签名
+		txCopy.TXInputs[i].PubKey = nil
+
+		// 4.执行签名动作，得到r,s字节流
+		r,s,err :=ecdsa.Sign(rand.Reader,privateKey,signDataHash)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		// 5.放到我们所签名的input的Signature中
+		signature := append(r.Bytes(),s.Bytes()...)
+		tx.TXInputs[i].Signature = signature
+	}
 }
+
+func (tx *Transaction)TrimmedCopy() Transaction {
+	var inputs []TXInput
+	var outputs []TXOutput
+
+	for _,input := range tx.TXInputs {
+		inputs = append(inputs, TXInput{input.TXid,input.Index,nil,nil})
+	}
+	for _,output := range tx.TXOutputs {
+		outputs = append(outputs, output)
+	}
+	return Transaction{tx.TXID,inputs,outputs}
+}
+
 
 
 // 3.创建挖矿交易

@@ -78,3 +78,4 @@ func CkeckSum(data []byte) []byte {
 	checkcode := hash2[:4]
 	return checkcode
 }
+

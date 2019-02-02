@@ -198,6 +198,8 @@ func (tx *Transaction)Sign(privateKey *ecdsa.PrivateKey,prevTXs map[string]Trans
 		// 所需要的三个数据都具备了，开始做哈希处理
 		txCopy.SetHash()
 		signDataHash := txCopy.TXID
+
+		//fmt.Printf("原始签名数据:%x\n",signDataHash)
 		// 还原，以免影响后面input的签名
 		txCopy.TXInputs[i].PubKey = nil
 
@@ -209,6 +211,9 @@ func (tx *Transaction)Sign(privateKey *ecdsa.PrivateKey,prevTXs map[string]Trans
 
 		// 5.放到我们所签名的input的Signature中
 		signature := append(r.Bytes(),s.Bytes()...)
+
+		//fmt.Printf("signature:%x\n",signature)
+
 		tx.TXInputs[i].Signature = signature
 	}
 }
@@ -232,8 +237,15 @@ func (tx *Transaction)TrimmedCopy() Transaction {
 func (tx *Transaction)Verify(prevTXs map[string]Transaction) bool {
 	// coinbase不需要校验
 	if tx.IsCoinbase() {
-	return true
+		return true
 	}
+	for _,input := range tx.TXInputs {
+		if prevTXs[string(input.TXid)].TXID == nil {
+			log.Panic("previous transaction is not valid")
+		}
+	}
+
+
 	// 1.得到签名的数据
 	txCopy := tx.TrimmedCopy()
 	for i,input := range tx.TXInputs {
@@ -243,12 +255,19 @@ func (tx *Transaction)Verify(prevTXs map[string]Transaction) bool {
 		}
 
 		txCopy.TXInputs[i].PubKey = prevTx.TXOutputs[input.Index].PubKeyHash
+		txCopy.TXInputs[i].Signature = nil
 		// 所需要的三个数据都具备了，开始做哈希处理
 		txCopy.SetHash()
+		// 还原，以免影响后面input的校验
+		txCopy.TXInputs[i].PubKey = nil
 		//得到签名的数据
 		signDataHash := txCopy.TXID
 		// 2.得到Signature
 		signature := input.Signature  //拆 r,s
+
+		//fmt.Printf("原始签名数据:%x\n",signDataHash)
+		//fmt.Printf("signature:%x\n",signature)
+
 		r := big.Int{}
 		s := big.Int{}
 		r.SetBytes(signature[:len(signature)/2])
@@ -259,18 +278,14 @@ func (tx *Transaction)Verify(prevTXs map[string]Transaction) bool {
 
 		X := big.Int{}
 		Y := big.Int{}
-		X.SetBytes(signature[:len(PubKey)/2])
-		Y.SetBytes(signature[len(PubKey)/2:])
+		X.SetBytes(PubKey[:len(PubKey)/2])
+		Y.SetBytes(PubKey[len(PubKey)/2:])
 
 		pubKeyOrigin := ecdsa.PublicKey{elliptic.P256(),&X,&Y}
 		// 4.Verify
 		if !ecdsa.Verify(&pubKeyOrigin,signDataHash,&r,&s) {
 			return false
 		}
-
-
-		// 还原，以免影响后面input的签名
-		txCopy.TXInputs[i].PubKey = nil
 
 	}
 

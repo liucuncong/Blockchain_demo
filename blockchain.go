@@ -64,6 +64,15 @@ func NewBlockChain(address string) *BlockChain {
 
 // 6.添加区块
 func (bc *BlockChain)AddBlock(txs []*Transaction)  {
+	//校验交易是否有效
+	for _,tx := range txs {
+		if !bc.VerifyTransaction(tx) {
+			fmt.Println("矿工发现无效交易")
+			return
+		}
+	}
+
+
 	// 1.获取最后一个区块的哈希
 	lastBlockHash := bc.LastBlockHash
 	db:= bc.DB
@@ -229,6 +238,7 @@ func (bc *BlockChain)FindTransactionByTXid(id []byte) (Transaction,error){
 	return Transaction{}, errors.New("无效的交易id，请检查!")
 }
 
+//交易签名
 func (bc *BlockChain)SignTransaction(tx *Transaction,privateKey *ecdsa.PrivateKey)  {
 	// 交易创建的最后进行签名
 	prevTXs := make(map[string]Transaction)
@@ -247,4 +257,30 @@ func (bc *BlockChain)SignTransaction(tx *Transaction,privateKey *ecdsa.PrivateKe
 	}
 
 	tx.Sign(privateKey,prevTXs)
+}
+
+// 交易验证
+func (bc *BlockChain)VerifyTransaction(tx *Transaction) bool {
+	// coinbase不需要校验
+	if tx.IsCoinbase() {
+		return true
+	}
+
+	prevTXs := make(map[string]Transaction)
+	// 找到所有引用的交易
+	//1.根据inputs来找，有多少input，就遍历多少次
+	for _,input := range tx.TXInputs {
+		// 根据TXid查找交易本身，需要遍历整个区块链
+		//2.找到目标交易（根据TXid来找）
+		tx,err := bc.FindTransactionByTXid(input.TXid)
+		if err != nil{
+			log.Panic(err)
+		}
+
+		//3.添加到prevTXs
+		prevTXs[string(input.TXid)] = tx
+	}
+	b := tx.Verify(prevTXs)
+	return b
+
 }

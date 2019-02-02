@@ -4,6 +4,9 @@ import (
 	"github.com/boltdb/bolt"
 	"log"
 	"bytes"
+	"fmt"
+	"errors"
+	"crypto/ecdsa"
 )
 
 // 3.引入区块连
@@ -58,7 +61,6 @@ func NewBlockChain(address string) *BlockChain {
 	}
 	return &BlockChain{db,lastBlockHash}
 }
-
 
 // 6.添加区块
 func (bc *BlockChain)AddBlock(txs []*Transaction)  {
@@ -200,4 +202,49 @@ func (bc *BlockChain)FindUTXOTransactions(senderPubKeyHash []byte) []*Transactio
 	}
 
 	return txs
+}
+
+//找到目标交易（根据TXid来找）
+func (bc *BlockChain)FindTransactionByTXid(id []byte) (Transaction,error){
+	// 1.遍历区块链
+	ite := bc.NewIterator()
+	// 2.遍历交易
+	for  {
+		block := ite.Next()
+		// 2.遍历交易
+		for _,tx := range block.Transactions {
+		// 3.比较交易，找到了直接退出
+			if bytes.Equal(tx.TXID,id) {
+				return *tx,nil
+			}
+		}
+
+		if len(block.PrevHash) == 0 {
+			fmt.Println("区块链遍历结束")
+			break
+		}
+
+	}
+	// 4.比较交易，没找到返回空Transaction，同时返回错误状态
+	return Transaction{}, errors.New("无效的交易id，请检查!")
+}
+
+func (bc *BlockChain)SignTransaction(tx *Transaction,privateKey *ecdsa.PrivateKey)  {
+	// 交易创建的最后进行签名
+	prevTXs := make(map[string]Transaction)
+	// 找到所有引用的交易
+	//1.根据inputs来找，有多少input，就遍历多少次
+	for _,input := range tx.TXInputs {
+		// 根据TXid查找交易本身，需要遍历整个区块链
+		//2.找到目标交易（根据TXid来找）
+		tx,err := bc.FindTransactionByTXid(input.TXid)
+		if err != nil{
+			log.Panic(err)
+		}
+
+		//3.添加到prevTXs
+		prevTXs[string(input.TXid)] = tx
+	}
+
+	tx.Sign(privateKey,prevTXs)
 }

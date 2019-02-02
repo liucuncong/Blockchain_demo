@@ -164,17 +164,14 @@ func NewTransaction(from,to string,amount float64,bc *BlockChain) *Transaction {
 	tx := Transaction{[]byte{},inputs,outputs}
 	tx.SetHash()
 
-	// 交易创建的最后进行签名
-	prevTXs := make(map[string]Transaction)
-
-	tx.Sign(*privateKey,prevTXs)
+	bc.SignTransaction(&tx,privateKey)
 
 	return &tx
 }
 
 // 签名的具体实现
 // 参数：私钥，inputs里面所有引用的交易的结构 map[string]Transaction
-func (tx *Transaction)Sign(privateKey ecdsa.PrivateKey,prevTXs map[string]Transaction)  {
+func (tx *Transaction)Sign(privateKey *ecdsa.PrivateKey,prevTXs map[string]Transaction)  {
 	// TODO
 }
 

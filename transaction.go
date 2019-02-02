@@ -6,8 +6,7 @@ import (
 	"log"
 	"crypto/sha256"
 	"fmt"
-	"github.com/btcsuite/btcutil/base58"
-)
+	)
 // 挖矿奖励
 const REWARD  = 50
 
@@ -48,13 +47,9 @@ type TXOutput struct {
 // 由于现在存储的字段是地址的公钥哈希，所以无法直接创建TXOutput
 // 为了能够得到公钥哈希，我们需要处理以下，写一个lock函数
 func (output *TXOutput)Lock(address string)  {
-	// 1.base58解码
-	addressBytes := base58.Decode(address) //25字节
-	// 2.截取出公钥哈希，去除version（1字节），去除校验玛（4字节）
-	len := len(addressBytes)
-	pubKeyHash := addressBytes[1:len-4]
+
 	// 锁定！！！！
-	output.PubKeyHash = pubKeyHash
+	output.PubKeyHash = GetPubKeyFromAddress(address)
 }
 
 //给TXOutput提供一个创建的方法，否则无法调用Lock
@@ -156,12 +151,12 @@ func NewTransaction(from,to string,amount float64,bc *BlockChain) *Transaction {
 	}
 	//3.创建outputs
 	//output := TXOutput{amount,to}
-	output := NewTXOutput(amount,from)
+	output := NewTXOutput(amount,to)
 
 	outputs = append(outputs, output)
 	//4.如果有零钱，要找零
 	if resValue > amount{
-		output = NewTXOutput(amount,from)
+		output = NewTXOutput(resValue - amount,from)
 		//找零
 		outputs = append(outputs, output)
 	}

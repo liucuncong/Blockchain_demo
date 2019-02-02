@@ -35,15 +35,36 @@ func (cli *CLI)PrintChain()  {
 }
 
 func (cli *CLI)GetBalance(address string)  {
-	//utxos := cli.BC.FindUTXOs(address)
-	//total := 0.0
-	//for _,utxo :=range utxos{
-	//	total += utxo.Value
-	//}
-	//fmt.Printf("%s的余额为:%f\n",address,total)
+	// 1.校验地址
+	if !IsValidAddress(address) {
+		fmt.Println("地址无效:",address)
+		return
+	}
+	//2.生成公钥哈希
+	pubKeyHash := GetPubKeyFromAddress(address)
+
+	utxos := cli.BC.FindUTXOs(pubKeyHash)
+	total := 0.0
+	for _,utxo :=range utxos{
+		total += utxo.Value
+	}
+	fmt.Printf("%s的余额为:%f\n",address,total)
 }
 
 func (cli *CLI)Send(from,to string,amount float64,miner,data string)()  {
+	// 校验地址
+	if !IsValidAddress(from) {
+		fmt.Println("地址无效from:",from)
+		return
+	}
+	if !IsValidAddress(to) {
+		fmt.Println("地址无效to:",to)
+		return
+	}
+	if !IsValidAddress(miner) {
+		fmt.Println("地址无效miner:",miner)
+		return
+	}
 	//1.创建一个挖矿交易
 	coinbase := NewCoinbaseTX(miner,data)
 	//2.创建一个普通交易

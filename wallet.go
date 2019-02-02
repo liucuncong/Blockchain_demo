@@ -8,7 +8,9 @@ import (
 	"crypto/sha256"
 	"github.com/btcsuite/btcutil/base58"
 	"golang.org/x/crypto/ripemd160"
-	)
+	"fmt"
+	"bytes"
+)
 
 
 // 这里的钱包是一个结构，保存了公钥、私钥对
@@ -55,7 +57,7 @@ func (w *Wallet)NewAddress() string {
 	return address
 }
 
-
+// 生成公钥哈希
 func HashRipemd160(pubKey []byte) []byte {
 	hash := sha256.Sum256(pubKey)
 
@@ -69,6 +71,7 @@ func HashRipemd160(pubKey []byte) []byte {
 	return rip160hash
 }
 
+// 生成后4字节校验玛
 func CkeckSum(data []byte) []byte {
 
 	//ckecksum
@@ -79,3 +82,21 @@ func CkeckSum(data []byte) []byte {
 	return checkcode
 }
 
+// 校验地址是否有效
+func IsValidAddress(address string) bool {
+	// 1.反推出25字节数据
+	addressBytes := base58.Decode(address)
+	if len(addressBytes) < 4{
+		return false
+	}
+	// 2.取出前21个字节，同时取出后4个字节
+	payload := addressBytes[:len(addressBytes)-4]
+	checksum := addressBytes[len(addressBytes)-4:]
+	// 3.对前21字节做一次checksum操作
+	checksum2 := CkeckSum(payload)
+	fmt.Println("checksum",checksum)
+	fmt.Println("checksum2",checksum2)
+	// 4.比较一下求得的checksum与后4个字节
+	b := bytes.Equal(checksum,checksum2)
+	return b
+}

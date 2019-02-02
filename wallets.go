@@ -7,6 +7,7 @@ import (
 	"log"
 	"crypto/elliptic"
 	"os"
+	"github.com/btcsuite/btcutil/base58"
 )
 
 // 定义一个Wallets结构，它保存所有的wallet及它的地址
@@ -86,5 +87,15 @@ func (ws *Wallets)ListAllAddresses() []string {
 		addresses = append(addresses, address)
 	}
 	return addresses
+}
+
+// 通过地址返回公钥哈希
+func GetPubKeyFromAddress(address string) []byte {
+	// 1.base58解码
+	addressBytes := base58.Decode(address) //25字节
+	// 2.截取出公钥哈希，去除version（1字节），去除校验玛（4字节）
+	len := len(addressBytes)
+	pubKeyHash := addressBytes[1:len-4]
+	return pubKeyHash
 }
 

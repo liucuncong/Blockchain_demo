@@ -14,9 +14,13 @@ func (cli *CLI)PrintChain()  {
 	bci := cli.BC.NewIterator()
 
 	// 调用迭代器，返回每一区块数据
+
+
 	for  {
 		// 返回区块，左移
 		block := bci.Next()
+
+
 		fmt.Println()
 		fmt.Printf("版本号:	%d\n",block.Version)
 		fmt.Printf("前区块哈希值:	%x\n",block.PrevHash)
@@ -27,11 +31,16 @@ func (cli *CLI)PrintChain()  {
 		fmt.Printf("随机数:	%d\n",block.Nounce)
 		fmt.Printf("当前区块哈希值:	%x\n",block.Hash)
 		fmt.Printf("区块数据:	%s\n",block.Transactions[0].TXInputs[0].PubKey)
+
+
 		if len(block.PrevHash) == 0 {
 			fmt.Println("区块链遍历结束")
 			break
 		}
+
 	}
+
+
 }
 
 func (cli *CLI)GetBalance(address string)  {
